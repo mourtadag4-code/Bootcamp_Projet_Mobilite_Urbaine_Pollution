@@ -363,7 +363,58 @@ def run_full_pipeline(file_path, outlier_method='winsorize', outlier_robust=True
     # Étape 1: Chargement
     df = load_data(file_path)
 
-    # Étape 2: Analyse initiale des outliers
+    # Étape 2: Vérification types (NOUVELLE ÉTAPE)
+    def validate_data_types(df):
+        print("\n🔍 VÉRIFICATION DES TYPES DE DONNÉES")
+        print("=" * 50)
+        
+        # Affichage des types actuels
+        type_report = pd.DataFrame({
+            'Colonne': df.columns,
+            'Type Actuel': df.dtypes.values,
+            'Valeurs Uniques': [df[col].nunique() for col in df.columns],
+            'Exemple': [df[col].iloc[0] if not df[col].empty else 'N/A' for col in df.columns]
+        })
+        print("📋 Types avant conversion :")
+        print(type_report.to_string())
+        
+        # Conversions critiques
+        conversions = []
+        
+        # Vérifier timestamp
+        if not pd.api.types.is_datetime64_any_dtype(df['timestamp']):
+            conversions.append(('timestamp', 'datetime'))
+            df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
+        
+        # Vérifier les colonnes numériques
+        numeric_cols = ['speed_kmh', 'traffic_density', 'air_quality_index', 
+                        'latitude', 'longitude']
+        
+        for col in numeric_cols:
+            if col in df.columns and not pd.api.types.is_numeric_dtype(df[col]):
+                current_type = str(df[col].dtype)
+                conversions.append((col, f'float (était {current_type})'))
+                df[col] = pd.to_numeric(df[col], errors='coerce')
+        
+        # Rapport des conversions
+        if conversions:
+            print("\n🔄 Conversions appliquées :")
+            for col, conversion in conversions:
+                print(f"  • {col} → {conversion}")
+        else:
+            print("\n✅ Tous les types sont corrects")
+        
+        # Affichage final
+        print(f"\n📊 Types après conversion :")
+        print(df.dtypes.to_string())
+        
+        return df
+
+    # Puis modifiez run_full_pipeline() pour l'inclure :
+    
+    
+
+    # Étape 3: Analyse initiale des outliers
     print("\n🔍 ANALYSE INITIALE DES OUTLIERS")
     detailed_outlier_analysis(df)
 
@@ -375,6 +426,7 @@ def run_full_pipeline(file_path, outlier_method='winsorize', outlier_robust=True
 
     # Étape 5: Création de features
     df = create_features(df)
+    df = validate_data_types(df)
 
     # Étape 6: Analyse après traitement
     print("\n🔍 ANALYSE APRÈS TRAITEMENT DES OUTLIERS")
