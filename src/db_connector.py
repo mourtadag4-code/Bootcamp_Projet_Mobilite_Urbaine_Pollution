@@ -1,7 +1,8 @@
+# Connexion à MySQL local
 !pip install pymysql
 
 from sqlalchemy import create_engine
-# Connexion à MySQL local
+
 def connect_to_mysql():
     """Établit la connexion à MySQL"""
     try:
